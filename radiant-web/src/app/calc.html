@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Loan Calculator</title>
+    <style>
+        /* CSS Styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .calculator {
+            max-width: 500px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-section, .output-section {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .output-section h2 {
+            margin-top: 0;
+        }
+
+        .output-section p {
+            font-size: 18px;
+        }
+
+        /* Styles for Amortization Table */
+        #amortization-schedule {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            text-align: right;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        td:first-child, th:first-child {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Loan Calculator</h1>
+    <div class="calculator">
+        <div class="input-section">
+            <label for="loan-amount">Loan Amount ($):</label>
+            <input type="number" id="loan-amount" value="10000" min="0">
+
+            <label for="interest-rate">Interest Rate (%):</label>
+            <input type="number" id="interest-rate" value="5" min="0" step="0.01">
+
+            <label for="loan-term">Loan Term:</label>
+            <input type="number" id="loan-term" value="5" min="0">
+
+            <label for="term-unit">Term Unit:</label>
+            <select id="term-unit">
+                <option value="years">Years</option>
+                <option value="months">Months</option>
+            </select>
+
+            <button id="calculate-btn">Calculate</button>
+        </div>
+        <div class="output-section">
+            <h2>Results:</h2>
+            <p>Monthly Payment: $<span id="monthly-payment">0.00</span></p>
+            <p>Total Payment: $<span id="total-payment">0.00</span></p>
+            <p>Total Interest: $<span id="total-interest">0.00</span></p>
+        </div>
+        <!-- Amortization Schedule Container -->
+        <div id="amortization-schedule"></div>
+    </div>
+
+    <script>
+        // JavaScript Code
+        document.getElementById('calculate-btn').addEventListener('click', calculateLoan);
+
+        function calculateLoan() {
+            // Get input values
+            const amount = parseFloat(document.getElementById('loan-amount').value);
+            let interestRate = parseFloat(document.getElementById('interest-rate').value);
+            let term = parseFloat(document.getElementById('loan-term').value);
+            const termUnit = document.getElementById('term-unit').value;
+
+            // Validate inputs
+            if (isNaN(amount) || amount <= 0 || isNaN(interestRate) || interestRate < 0 || isNaN(term) || term <= 0) {
+                alert('Please enter positive numerical values for loan amount, interest rate, and loan term.');
+                return;
+            }
+
+            // Convert interest rate into decimal
+            const monthlyInterestRate = interestRate / 100 / 12;
+
+            // Convert term into months if in years
+            if (termUnit === 'years') {
+                term = term * 12;
+            }
+
+            // Calculate monthly payment
+            const x = Math.pow(1 + monthlyInterestRate, term);
+            const monthlyPayment = (amount * x * monthlyInterestRate) / (x - 1);
+
+            if (isFinite(monthlyPayment)) {
+                const totalPayment = monthlyPayment * term;
+                const totalInterest = totalPayment - amount;
+
+                // Display results
+                document.getElementById('monthly-payment').textContent = monthlyPayment.toFixed(2);
+                document.getElementById('total-payment').textContent = totalPayment.toFixed(2);
+                document.getElementById('total-interest').textContent = totalInterest.toFixed(2);
+
+                // Generate and display amortization schedule
+                const amortizationSchedule = generateAmortizationSchedule(amount, monthlyInterestRate, term, monthlyPayment);
+                displayAmortizationSchedule(amortizationSchedule);
+            } else {
+                // Handle errors
+                document.getElementById('monthly-payment').textContent = '0.00';
+                document.getElementById('total-payment').textContent = '0.00';
+                document.getElementById('total-interest').textContent = '0.00';
+                alert('Calculation error. Please check your input values.');
+            }
+        }
+
+        function generateAmortizationSchedule(amount, monthlyInterestRate, term, monthlyPayment) {
+            let balance = amount;
+            const amortizationTable = [];
+
+            for (let i = 1; i <= term; i++) {
+                const interest = balance * monthlyInterestRate;
+                const principal = monthlyPayment - interest;
+                balance -= principal;
+
+                amortizationTable.push({
+                    month: i,
+                    payment: monthlyPayment.toFixed(2),
+                    principal: principal.toFixed(2),
+                    interest: interest.toFixed(2),
+                    balance: Math.abs(balance).toFixed(2),
+                });
+            }
+            return amortizationTable;
+        }
+
+        function displayAmortizationSchedule(schedule) {
+            let table = '<h2>Amortization Schedule:</h2><table><tr><th>Month</th><th>Payment</th><th>Principal</th><th>Interest</th><th>Balance</th></tr>';
+            schedule.forEach((row) => {
+                table += `<tr>
+                    <td>${row.month}</td>
+                    <td>${row.payment}</td>
+                    <td>${row.principal}</td>
+                    <td>${row.interest}</td>
+                    <td>${row.balance}</td>
+                </tr>`;
+            });
+            table += '</table>';
+
+            const scheduleContainer = document.getElementById('amortization-schedule');
+            scheduleContainer.innerHTML = table;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Text Analysis Tool</title>
+    <!-- Include Chart.js from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Add some basic styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+        }
+        #results {
+            margin-top: 20px;
+        }
+        .chart-container {
+            width: 50%;
+            margin: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Text Analysis Tool</h1>
+    <p>Enter your text below to get insights and metrics about your writing.</p>
+    <form id="textForm">
+        <textarea id="inputText" placeholder="Type or paste your text here..."></textarea><br>
+        <button type="submit">Analyze Text</button>
+    </form>
+    <div id="results">
+        <!-- Results will be displayed here -->
+    </div>
+
+    <script>
+        document.getElementById('textForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            var text = document.getElementById('inputText').value;
+            analyzeText(text);
+        });
+
+        function analyzeText(text) {
+            // Initialize results
+            var wordCount = 0;
+            var characterCount = 0;
+            var sentenceCount = 0;
+            var avgWordsPerSentence = 0;
+            var lexicalDensity = 0;
+            var readabilityScore = 0;
+            var sentiment = '';
+            var partsOfSpeechCounts = {};
+
+            // Text processing
+            // Remove extra spaces and line breaks
+            text = text.trim();
+
+            // Character count (including spaces)
+            characterCount = text.length;
+
+            // Word count
+            var words = text.match(/\b\w+\b/g);
+            if (words) {
+                wordCount = words.length;
+            } else {
+                wordCount = 0;
+            }
+
+            // Sentence count
+            var sentences = text.match(/[^\.!\?]+[\.!\?]+/g);
+            if (sentences) {
+                sentenceCount = sentences.length;
+            } else {
+                sentenceCount = 0;
+            }
+
+            // Average words per sentence
+            if (sentenceCount > 0) {
+                avgWordsPerSentence = (wordCount / sentenceCount).toFixed(2);
+            } else {
+                avgWordsPerSentence = wordCount;
+            }
+
+            // Lexical Density (unique words / total words)
+            var uniqueWords = [];
+            if (words) {
+                var wordSet = new Set(words.map(function(w) { return w.toLowerCase(); }));
+                uniqueWords = Array.from(wordSet);
+                lexicalDensity = ((uniqueWords.length / wordCount) * 100).toFixed(2);
+            }
+
+            // Readability score (Flesch Reading Ease)
+            // Formula: 206.835 - 1.015(total words/total sentences) - 84.6(total syllables/total words)
+            var totalSyllables = countSyllables(text);
+            if (wordCount > 0 && sentenceCount > 0) {
+                readabilityScore = (206.835 - 1.015 * (wordCount / sentenceCount) - 84.6 * (totalSyllables / wordCount)).toFixed(2);
+            }
+
+            // Sentiment Analysis (basic implementation)
+            sentiment = analyzeSentiment(text);
+
+            // Parts of Speech (simplified)
+            partsOfSpeechCounts = countPartsOfSpeech(text);
+
+            // Display Results
+            displayResults({
+                wordCount: wordCount,
+                characterCount: characterCount,
+                sentenceCount: sentenceCount,
+                avgWordsPerSentence: avgWordsPerSentence,
+                lexicalDensity: lexicalDensity,
+                readabilityScore: readabilityScore,
+                sentiment: sentiment,
+                partsOfSpeechCounts: partsOfSpeechCounts
+            });
+        }
+
+        function countSyllables(text) {
+            var words = text.toLowerCase().match(/\b\w+\b/g);
+            var syllableCount = 0;
+            if (words) {
+                words.forEach(function(word) {
+                    syllableCount += syllableCountInWord(word);
+                });
+            }
+            return syllableCount;
+        }
+
+        function syllableCountInWord(word) {
+            word = word.toLowerCase();                                     //word.downcase!
+            if(word.length <= 3) { return 1; }                             //return 1 if word.length <= 3
+            word = word.replace(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/, '');    //word = word.gsub(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/, '')
+            word = word.replace(/^y/, '');                                  //word = word.gsub(/^y/, '')
+            var matches = word.match(/[aeiouy]{1,2}/g);                     //word.scan(/[aeiouy]{1,2}/)
+            return matches ? matches.length : 1;
+        }
+
+        function analyzeSentiment(text) {
+            var positiveWords = ['good', 'great', 'excellent', 'positive', 'fortunate', 'correct', 'superior'];
+            var negativeWords = ['bad', 'poor', 'wrong', 'negative', 'unfortunate', 'inferior', 'awful'];
+            var positiveCount = 0;
+            var negativeCount = 0;
+            var words = text.toLowerCase().match(/\b\w+\b/g);
+            if (words) {
+                words.forEach(function(word) {
+                    if (positiveWords.includes(word)) {
+                        positiveCount++;
+                    } else if (negativeWords.includes(word)) {
+                        negativeCount++;
+                    }
+                });
+            }
+            if (positiveCount > negativeCount) {
+                return 'Positive';
+            } else if (negativeCount > positiveCount) {
+                return 'Negative';
+            } else {
+                return 'Neutral';
+            }
+        }
+
+        function countPartsOfSpeech(text) {
+            // For simplicity, we'll use regex to roughly estimate parts of speech
+            var posCounts = {
+                nouns: 0,
+                verbs: 0,
+                adjectives: 0,
+                adverbs: 0
+            };
+            var words = text.match(/\b\w+\b/g);
+            if (words) {
+                words.forEach(function(word) {
+                    if (word.match(/(ion|ity|ment|ness|ship|er|ist|ism|age|ery|ry|hood|dom|cy|ence|ance|or|ess|ee|eer|logy)$/i)) {
+                        posCounts.nouns++;
+                    } else if (word.match(/(ate|fy|en|ify|ize)$/i)) {
+                        posCounts.verbs++;
+                    } else if (word.match(/(able|ible|al|ant|ary|ful|ic|ish|ive|less|ous|y)$/i)) {
+                        posCounts.adjectives++;
+                    } else if (word.match(/(ly)$/i)) {
+                        posCounts.adverbs++;
+                    }
+                });
+            }
+            return posCounts;
+        }
+
+        function displayResults(results) {
+            var resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `
+                <h2>Analysis Results</h2>
+                <p><strong>Word Count:</strong> ${results.wordCount}</p>
+                <p><strong>Character Count:</strong> ${results.characterCount}</p>
+                <p><strong>Sentence Count:</strong> ${results.sentenceCount}</p>
+                <p><strong>Average Words per Sentence:</strong> ${results.avgWordsPerSentence}</p>
+                <p><strong>Lexical Density:</strong> ${results.lexicalDensity}%</p>
+                <p><strong>Readability Score (Flesch Reading Ease):</strong> ${results.readabilityScore}</p>
+                <p><strong>Sentiment:</strong> ${results.sentiment}</p>
+                <h3>Parts of Speech Distribution</h3>
+                <canvas id="posChart"></canvas>
+            `;
+            // Draw chart
+            drawPOSChart(results.partsOfSpeechCounts);
+        }
+
+        function drawPOSChart(posCounts) {
+            var ctx = document.getElementById('posChart').getContext('2d');
+            var chart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Nouns', 'Verbs', 'Adjectives', 'Adverbs'],
+                    datasets: [{
+                        data: [
+                            posCounts.nouns,
+                            posCounts.verbs,
+                            posCounts.adjectives,
+                            posCounts.adverbs
+                        ],
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.6)',
+                            'rgba(54, 162, 235, 0.6)',
+                            'rgba(255, 206, 86, 0.6)',
+                            'rgba(75, 192, 192, 0.6)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true
+                }
+            });
+        }
+    </script>
+</body>
+</html>

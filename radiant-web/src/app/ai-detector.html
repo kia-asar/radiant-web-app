@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Text Detector</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        textarea {
+            width: 100%;
+            font-size: 16px;
+        }
+        button {
+            margin-top: 10px;
+            padding: 10px 15px;
+            font-size: 16px;
+        }
+        #result {
+            margin-top: 20px;
+        }
+        #score {
+            font-size: 2em;
+            font-weight: bold;
+            color: #007BFF;
+        }
+        .criteria {
+            margin-top: 15px;
+        }
+        .criteria p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>AI Text Detector</h1>
+    <textarea id="inputText" rows="10" placeholder="Paste your text here..."></textarea><br>
+    <button id="analyzeButton">Analyze Text</button>
+
+    <div id="result" style="display: none;">
+        <p>Your AI-generated score is: <span id="score">0%</span></p>
+        <div id="feedback"></div>
+    </div>
+
+    <script>
+        document.getElementById('analyzeButton').addEventListener('click', analyzeText);
+
+        function analyzeText() {
+            const text = document.getElementById('inputText').value.trim();
+            if (text === '') {
+                alert('Please enter some text to analyze.');
+                return;
+            }
+            const tokens = tokenizeText(text);
+            const features = extractFeatures(tokens);
+            const score = calculateScore(features);
+            displayResult(score, features);
+        }
+
+        function tokenizeText(text) {
+            // Split text into sentences
+            const sentences = text.match(/[^.!?]+[.!?]?/g) || [text];
+            // Split text into words
+            const words = text.match(/\b\w+\b/g) || [];
+            return { sentences, words };
+        }
+
+        function extractFeatures({ sentences, words }) {
+            const numSentences = sentences.length;
+            const numWords = words.length;
+
+            // Repetition and Redundancy
+            const ngrams = getNGrams(words, 3);
+            const repeatedPhrases = countRepetitions(ngrams);
+
+            // Vocabulary Diversity
+            const ttr = calculateTTR(words);
+
+            // Average Sentence Length
+            const avgSentenceLength = numWords / numSentences;
+
+            // Sentence Length Variance
+            const sentenceLengths = sentences.map(s => s.split(' ').length);
+            const sentenceLengthVariance = calculateVariance(sentenceLengths);
+
+            // Grammar and Spelling Errors (simple implementation)
+            const spellingErrors = countSpellingErrors(words);
+
+            // Sentiment Analysis (simple implementation)
+            const sentimentScore = analyzeSentiment(words);
+
+            // Personal Pronouns
+            const personalPronouns = countPersonalPronouns(words);
+
+            return {
+                repeatedPhrases,
+                ttr,
+                avgSentenceLength,
+                sentenceLengthVariance,
+                spellingErrors,
+                sentimentScore,
+                personalPronouns
+            };
+        }
+
+        function getNGrams(words, n) {
+            const ngrams = [];
+            for (let i = 0; i <= words.length - n; i++) {
+                ngrams.push(words.slice(i, i + n).join(' ').toLowerCase());
+            }
+            return ngrams;
+        }
+
+        function countRepetitions(ngrams) {
+            const frequency = {};
+            ngrams.forEach(phrase => {
+                frequency[phrase] = (frequency[phrase] || 0) + 1;
+            });
+            let repetitions = 0;
+            for (let phrase in frequency) {
+                if (frequency[phrase] > 1) {
+                    repetitions += frequency[phrase] - 1;
+                }
+            }
+            return repetitions;
+        }
+
+        function calculateTTR(words) {
+            const uniqueWords = new Set(words.map(word => word.toLowerCase()));
+            return (uniqueWords.size / words.length) * 100;
+        }
+
+        function calculateVariance(numbers) {
+            const mean = numbers.reduce((a, b) => a + b, 0) / numbers.length;
+            const squaredDiffs = numbers.map(n => Math.pow(n - mean, 2));
+            const variance = squaredDiffs.reduce((a, b) => a + b, 0) / numbers.length;
+            return variance;
+        }
+
+        function countSpellingErrors(words) {
+            // Simple implementation using a basic dictionary
+            const dictionary = new Set([
+                // A small sample dictionary; in practice, use a comprehensive list
+                'the', 'and', 'to', 'of', 'a', 'in', 'that', 'is', 'it', 'for',
+                'on', 'with', 'as', 'was', 'at', 'by', 'an', 'be', 'this', 'have',
+                'from', 'or', 'one', 'had', 'but', 'not', 'what', 'all', 'were',
+                'we', 'when', 'your', 'can', 'there', 'use', 'word', 'how', 'said',
+                'each', 'she', 'which', 'do', 'their', 'time', 'if', 'will', 'way',
+                'about', 'many', 'then', 'them', 'write', 'would', 'like', 'so',
+                'these', 'her', 'long', 'make', 'thing', 'see', 'him', 'two', 'has',
+                'look', 'more', 'day', 'could', 'go', 'come', 'did', 'number', 'sound',
+                'no', 'most', 'people', 'my', 'over', 'know', 'water', 'than', 'call',
+                'first', 'who', 'may', 'down', 'side', 'been', 'now', 'find'
+            ]);
+            let errors = 0;
+            words.forEach(word => {
+                if (!dictionary.has(word.toLowerCase())) {
+                    errors++;
+                }
+            });
+            return errors;
+        }
+
+        function analyzeSentiment(words) {
+            // Simple sentiment analysis based on positive and negative words
+            const positiveWords = new Set(['good', 'great', 'excellent', 'positive', 'fortunate', 'correct', 'superior', 'happy']);
+            const negativeWords = new Set(['bad', 'terrible', 'poor', 'negative', 'unfortunate', 'wrong', 'inferior', 'sad']);
+            let score = 0;
+            words.forEach(word => {
+                if (positiveWords.has(word.toLowerCase())) {
+                    score++;
+                } else if (negativeWords.has(word.toLowerCase())) {
+                    score--;
+                }
+            });
+            return score;
+        }
+
+        function countPersonalPronouns(words) {
+            const pronouns = new Set(['I', 'me', 'my', 'mine', 'we', 'us', 'our', 'ours']);
+            let count = 0;
+            words.forEach(word => {
+                if (pronouns.has(word)) {
+                    count++;
+                }
+            });
+            return count;
+        }
+
+        function calculateScore(features) {
+            let score = 0;
+            // Assigning weights to each feature
+            const weights = {
+                repeatedPhrases: 20,
+                ttr: 15,
+                sentenceLengthVariance: 15,
+                personalPronouns: 20,
+                spellingErrors: 10,
+                sentimentScore: 10,
+                avgSentenceLength: 10
+            };
+
+            // Repetition Score
+            const repetitionScore = Math.min(features.repeatedPhrases * 10, 100);
+
+            // Vocabulary Diversity Score
+            const diversityScore = 100 - features.ttr;
+
+            // Sentence Length Variance Score
+            const varianceScore = 100 - Math.min(features.sentenceLengthVariance * 10, 100);
+
+            // Personal Pronoun Score
+            const pronounScore = features.personalPronouns > 0 ? 0 : 100;
+
+            // Spelling Error Score
+            const spellingScore = features.spellingErrors === 0 ? 100 : 0;
+
+            // Sentiment Score
+            const sentimentScore = features.sentimentScore === 0 ? 100 : 0;
+
+            // Average Sentence Length Score
+            const avgSentenceLengthScore = features.avgSentenceLength > 20 ? 100 : 0;
+
+            // Weighted Sum
+            score += (repetitionScore * weights.repeatedPhrases) / 100;
+            score += (diversityScore * weights.ttr) / 100;
+            score += (varianceScore * weights.sentenceLengthVariance) / 100;
+            score += (pronounScore * weights.personalPronouns) / 100;
+            score += (spellingScore * weights.spellingErrors) / 100;
+            score += (sentimentScore * weights.sentimentScore) / 100;
+            score += (avgSentenceLengthScore * weights.avgSentenceLength) / 100;
+
+            // Normalize score between 0 and 100
+            score = Math.min(Math.max(score, 0), 100);
+
+            return score.toFixed(2);
+        }
+
+        function displayResult(score, features) {
+            document.getElementById('score').innerText = score + '%';
+            document.getElementById('result').style.display = 'block';
+
+            const feedback = `
+                <div class="criteria">
+                    <p><strong>Repetitions Detected:</strong> ${features.repeatedPhrases}</p>
+                    <p><strong>Vocabulary Diversity (TTR):</strong> ${features.ttr.toFixed(2)}%</p>
+                    <p><strong>Sentence Length Variance:</strong> ${features.sentenceLengthVariance.toFixed(2)}</p>
+                    <p><strong>Personal Pronouns Used:</strong> ${features.personalPronouns}</p>
+                    <p><strong>Spelling Errors Found:</strong> ${features.spellingErrors}</p>
+                    <p><strong>Sentiment Score:</strong> ${features.sentimentScore}</p>
+                    <p><strong>Average Sentence Length:</strong> ${features.avgSentenceLength.toFixed(2)} words</p>
+                </div>
+            `;
+            document.getElementById('feedback').innerHTML = feedback;
+        }
+    </script>
+</body>
+</html>
