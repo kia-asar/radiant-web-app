@@ -14,23 +14,33 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 
-export function LoginComponent() {
+interface LoginProps {
+  onLogin: (email: string, password: string) => void;
+  onSignUp: (email: string, password: string) => void;
+  onForgotPassword: (email: string) => void;
+}
+
+export function LoginComponent({ onLogin, onSignUp, onForgotPassword }: LoginProps) {
   const [showPassword, setShowPassword] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [repeatPassword, setRepeatPassword] = useState('')
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState('')
+  const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false)
+  const [isForgotPasswordModalOpen, setIsForgotPasswordModalOpen] = useState(false)
   const [errors, setErrors] = useState({
     email: '',
     password: '',
-    repeatPassword: ''
+    repeatPassword: '',
+    forgotPasswordEmail: ''
   })
 
   const validateForm = (isSignUp = false) => {
     const newErrors = {
       email: email ? '' : 'Email is required',
       password: password ? '' : 'Password is required',
-      repeatPassword: ''
+      repeatPassword: '',
+      forgotPasswordEmail: ''
     }
 
     if (isSignUp) {
@@ -45,26 +55,41 @@ export function LoginComponent() {
     return Object.values(newErrors).every(error => !error)
   }
 
+  const validateForgotPasswordForm = () => {
+    const newErrors = {
+      ...errors,
+      forgotPasswordEmail: forgotPasswordEmail ? '' : 'Email is required'
+    }
+    setErrors(newErrors)
+    return !newErrors.forgotPasswordEmail
+  }
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
     if (validateForm()) {
-      // Handle login logic here
-      console.log('Logging in...')
+      onLogin(email, password)
     }
   }
 
   const handleSignUp = (e: React.FormEvent) => {
     e.preventDefault()
     if (validateForm(true)) {
-      // Handle sign up logic here
-      console.log('Signing up...')
-      setIsModalOpen(false)
+      onSignUp(email, password)
+      setIsSignUpModalOpen(false)
+    }
+  }
+
+  const handleForgotPassword = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (validateForgotPasswordForm()) {
+      onForgotPassword(forgotPasswordEmail)
+      setIsForgotPasswordModalOpen(false)
     }
   }
 
   return (
     <div className="bg-yuja-gradient min-h-screen p-4 flex items-center justify-center">
-      <Card className="w-full bg-white/80 backdrop-blur-md rounded-t-3xl rounded-b-none">
+      <Card className="w-full max-w-md bg-white/80 backdrop-blur-md">
         <CardHeader className="pb-0">
           <CardTitle className="text-2xl font-bold text-center">Welcome to Yuja</CardTitle>
         </CardHeader>
@@ -111,7 +136,7 @@ export function LoginComponent() {
               <Button className="flex-1" type="submit">
                 Log In
               </Button>
-              <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+              <Dialog open={isSignUpModalOpen} onOpenChange={setIsSignUpModalOpen}>
                 <DialogTrigger asChild>
                   <Button className="flex-1" type="button" variant="outline">
                     Sign Up
@@ -164,7 +189,32 @@ export function LoginComponent() {
             </div>
           </form>
           <div className="mt-8 text-center text-sm">
-            <a href="#" className="text-pink-600 hover:underline">Forgot password?</a>
+            <Dialog open={isForgotPasswordModalOpen} onOpenChange={setIsForgotPasswordModalOpen}>
+              <DialogTrigger asChild>
+                <Button variant="link" className="text-pink-600 hover:underline p-0">Forgot password?</Button>
+              </DialogTrigger>
+              <DialogContent className="bg-white">
+                <DialogHeader>
+                  <DialogTitle>Forgot Password</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleForgotPassword} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="forgot-password-email">Email</Label>
+                    <Input
+                      id="forgot-password-email"
+                      type="email"
+                      placeholder="Enter your email"
+                      value={forgotPasswordEmail}
+                      onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                    />
+                    {errors.forgotPasswordEmail && <p className="text-red-500 text-sm">{errors.forgotPasswordEmail}</p>}
+                  </div>
+                  <Button className="w-full" type="submit">
+                    Reset Password
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
           </div>
         </CardContent>
       </Card>
