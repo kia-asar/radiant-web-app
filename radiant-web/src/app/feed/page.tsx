@@ -1,10 +1,18 @@
-import { FeedComponent } from "@/components/pages-feed"
+'use client'
+
+import { Home } from "@/components/pages-home"
+import { useRouter } from 'next/navigation'
 
 export default function FeedPage() {
+  const router = useRouter()
+
+  const handleNewPost = () => {
+    router.push('/new-post')
+  }
+
   return (
     <div className="bg-gradient-default min-h-screen">
-      <h1 className="text-4xl font-bold mb-8 text-center pt-12">Welcome to Yuja</h1>
-      <FeedComponent />
+      <Home onNewPost={handleNewPost} />
     </div>
   )
 }
