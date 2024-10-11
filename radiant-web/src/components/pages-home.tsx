@@ -1,19 +1,32 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
-import { PlusCircle, ArrowUp, ArrowDown, MessageSquare, Share2 } from 'lucide-react'
+import { PlusCircle, ArrowUp, ArrowDown, MessageSquare, Share2, LogOut } from 'lucide-react'
 
 interface HomePageProps {
   onNewPost: () => void;
+  onLogout: () => void; // Add this line
 }
 
-export function Home({ onNewPost }: HomePageProps) {
+export function Home({ onNewPost, onLogout }: HomePageProps) { // Update this line
   return (
     <div className="bg-yuja-gradient min-h-screen">
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-3xl mx-auto relative">
         <div className="p-4 pb-2">
-          <h1 className="text-4xl font-bold text-center mb-4 text-black">Welcome to Yuja</h1>
+          <div className="flex justify-end mb-2"> {/* New row for logout button */}
+            <Button
+              variant="default"
+              size="icon"
+              onClick={onLogout}
+              className="bg-black hover:bg-gray-800"
+            >
+              <LogOut className="h-5 w-5 text-white" />
+            </Button>
+          </div>
+          <div className="text-center mb-4"> {/* Centered title */}
+            <h1 className="text-4xl font-bold text-black">Welcome to Yuja</h1>
+          </div>
           
           <div className="mb-2">
             <Button onClick={onNewPost} className="w-full">
@@ -29,7 +42,25 @@ export function Home({ onNewPost }: HomePageProps) {
   )
 }
 
-const FeedPost = ({ 
+// Update the FeedPost component props to match the API response
+interface FeedPostProps {
+  id: number;
+  userId: string;
+  title: string;
+  content: string;
+  createdAt: string;
+  userName: string;
+  userImage: string;
+  images: string[];
+  voteCount: number;
+  commentCount: number;
+  onUpvote: () => void;
+  onDownvote: () => void;
+  onComment: () => void;
+  onShare: () => void;
+}
+
+const FeedPost: React.FC<FeedPostProps> = ({ 
   userName, 
   userImage, 
   content, 
@@ -80,76 +111,97 @@ const FeedPost = ({
   )
 }
 
+// Update the Feed component
 function Feed() {
-  const feedData = [
-    {
-      userName: "John Doe",
-      userImage: "/placeholder.svg?height=40&width=40",
-      content: "Just had an amazing day at the beach! 🏖️",
-      images: [
-        "/placeholder.svg?height=200&width=200",
-        "/placeholder.svg?height=200&width=200",
-        "/placeholder.svg?height=200&width=200",
-      ],
-      voteCount: 15,
-      commentCount: 5,
-    },
-    {
-      userName: "Jane Smith",
-      userImage: "/placeholder.svg?height=40&width=40",
-      content: "Check out my new artwork! 🎨",
-      images: [
-        "/placeholder.svg?height=200&width=200",
-        "/placeholder.svg?height=200&width=200",
-      ],
-      voteCount: 0,
-      commentCount: 3,
-    },
-    {
-      userName: "Bob Johnson",
-      userImage: "/placeholder.svg?height=40&width=40",
-      content: "Just finished reading an amazing book. Highly recommend!",
-      images: [],
-      voteCount: -2,
-      commentCount: 7,
-    },
-  ]
+  const [posts, setPosts] = useState<FeedPostProps[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleUpvote = (index) => {
-    console.log(`Upvoted post ${index}`)
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  const fetchPosts = async () => {
+    try {
+      const response = await fetch('http://localhost/api/v1/posts/all', {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch posts');
+      }
+
+      const data = await response.json();
+      console.log('API Response:', data);
+
+      if (!data.posts || !Array.isArray(data.posts)) {
+        throw new Error('API response does not contain an array of posts');
+      }
+
+      // Map the API response to our FeedPostProps format
+      const mappedPosts: FeedPostProps[] = data.posts.map((post: any) => ({
+        id: post.id,
+        userId: post.user_id,
+        title: post.title,
+        content: post.content,
+        createdAt: post.created_at,
+        userName: post.user_id ? `User ${post.user_id.slice(-4)}` : 'Anonymous', // We don't have this in the API response
+        userImage: '/placeholder.svg?height=40&width=40', // We don't have this in the API response
+        images: [], // We don't have this in the API response
+        voteCount: 0, // We don't have this in the API response
+        commentCount: 0, // We don't have this in the API response
+        onUpvote: () => handleUpvote(post.id),
+        onDownvote: () => handleDownvote(post.id),
+        onComment: () => handleComment(post.id),
+        onShare: () => handleShare(post.id),
+      }));
+      setPosts(mappedPosts);
+      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching posts:', err);
+      setError('Failed to fetch posts. Please try again later.');
+      setLoading(false);
+    }
+  };
+
+  const handleUpvote = (id: number) => {
+    console.log(`Upvoted post ${id}`);
     // Add your upvote logic here
   }
 
-  const handleDownvote = (index) => {
-    console.log(`Downvoted post ${index}`)
+  const handleDownvote = (id: number) => {
+    console.log(`Downvoted post ${id}`);
     // Add your downvote logic here
   }
 
-  const handleComment = (index) => {
-    console.log(`Commented on post ${index}`)
+  const handleComment = (id: number) => {
+    console.log(`Commented on post ${id}`);
     // Add your comment logic here
   }
 
-  const handleShare = (index) => {
-    console.log(`Shared post ${index}`)
+  const handleShare = (id: number) => {
+    console.log(`Shared post ${id}`);
     // Add your share logic here
+  }
+
+  if (loading) {
+    return <div className="text-center py-4">Loading posts...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-4 text-red-500">{error}</div>;
   }
 
   return (
     <div>
-      {feedData.map((post, index) => (
+      {posts.map((post) => (
         <FeedPost 
-          key={index} 
-          userName={post.userName}
-          userImage={post.userImage}
-          content={post.content}
-          images={post.images}
-          voteCount={post.voteCount}
-          commentCount={post.commentCount}
-          onUpvote={() => handleUpvote(index)}
-          onDownvote={() => handleDownvote(index)}
-          onComment={() => handleComment(index)}
-          onShare={() => handleShare(index)}
+          key={post.id}
+          {...post}
         />
       ))}
     </div>

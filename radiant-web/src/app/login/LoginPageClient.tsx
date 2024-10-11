@@ -9,7 +9,7 @@ export default function LoginPageClient() {
   const handleLogin = async (email: string, password: string) => {
     console.log('Attempting login')
     try {
-      const response = await fetch('http://localhost:8000/v1/users/sign-in', {
+      const response = await fetch('http://localhost/api/v1/users/sign-in', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

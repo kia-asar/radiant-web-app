@@ -14,7 +14,7 @@ export default function Page() {
   const [posts, setPosts] = useState<{ user_name: string; post_text: string }[]>([])
 
   useEffect(() => {
-    fetch('http://localhost:8000/v1/posts/list-files/b1')
+    fetch('http://localhost/api:8000/v1/posts/list-files/b1')
       .then(response => response.json())
       .then(data => {
         const formattedPosts = data.files.map((file: string, index: number) => ({
@@ -41,7 +41,7 @@ export default function Page() {
 //   const [data, setData] = useState(null);
 
 //   useEffect(() => {
-//     fetch('http://127.0.0.1:8000/v1/posts/list-files/b1')
+//     fetch('http://localhost/api/v1/posts/list-files/b1')
 //       .then((response) => response.json())
 //       .then((data) => setData(data.files.join(', ')));
 //   }, []);

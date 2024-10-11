@@ -10,9 +10,13 @@ export default function FeedPage() {
     router.push('/new-post')
   }
 
+  const handleLogout = () => {
+    router.push('/login')
+  }
+
   return (
     <div className="bg-gradient-default min-h-screen">
-      <Home onNewPost={handleNewPost} />
+      <Home onNewPost={handleNewPost} onLogout={handleLogout} />
     </div>
   )
 }

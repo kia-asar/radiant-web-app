@@ -8,11 +8,11 @@ export default function NewPostPage() {
 
   const createPost = async (content: string, url: string, photos: File[]) => {
     try {
-      const response = await fetch("http://127.0.0.1:8000/v1/posts/new", {
+      const response = await fetch("http://localhost/api/v1/posts/new", {
         method: "POST",
+        credentials: 'include',
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjU0MzIxL2F1dGgvdjEiLCJzdWIiOiI5OTllNzY1OC0xMjUyLTRhN2QtODRiOC0zYWI3OGMzYTViNzYiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzI4NDM0MTQwLCJpYXQiOjE3Mjg0MzA1NDAsImVtYWlsIjoidXNlckBleGFtcGxlLmNvbSIsInBob25lIjoiIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWwiOiJ1c2VyQGV4YW1wbGUuY29tIiwiZW1haWxfdmVyaWZpZWQiOmZhbHNlLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6Ijk5OWU3NjU4LTEyNTItNGE3ZC04NGI4LTNhYjc4YzNhNWI3NiJ9LCJyb2xlIjoiYXV0aGVudGljYXRlZCIsImFhbCI6ImFhbDEiLCJhbXIiOlt7Im1ldGhvZCI6InBhc3N3b3JkIiwidGltZXN0YW1wIjoxNzI4MzcxOTY2fV0sInNlc3Npb25faWQiOiI3NGUwZDAzZC01NzA3LTQ4NTQtODVkNi04OWI2NDY2NDQ2MGEiLCJpc19hbm9ueW1vdXMiOmZhbHNlfQ.o4d1P2JXf4JSycLjU0dYPUrRMGGVpmwqlLKRlQhx5Cs`,
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({
           title: "New Post",
